@@ -1,0 +1,55 @@
+# Visual Studio Code specific files
+.vscode/
+*.code-workspace
+
+# Build and compiled files
+bin/
+build/
+*.o
+*.out
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Temporary files
+*.log
+*.swp
+*~
+
+# Virtual Environment (Python)
+venv/
+__pycache__/
+
+# Python generated files
+*.pyc
+*.pyo
+__pycache__/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Jupyter Notebooks metadata
+*.ipynb_metadata/
+
+# Ignore local development environment configuration file
+.vscode/settings.json
+
+# Ignore local Python development environment configuration files
+*.pyc/
+*.pyo/
+*.pyd/
+__pycache__/
+*.pyc
+
+# Ignore virtualenv environment configuration file
+.python-version
+
+# Ignore CMake configuration files
+CMakeLists.txt.user
+
+# Ignore CMake generated build files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
