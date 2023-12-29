@@ -1,59 +1,51 @@
 #pragma once
 #include <vector>
+#include "dtype.h"
 
-template <typename T>
+struct Buffer
+{
+    void *ptr_ = nullptr;
+    size_t numberOfBytes_ = 0;
+
+    Buffer() = default;
+    ~Buffer() = default;
+
+    void allocate(size_t numberOfBytes);
+};
+
 class Array
 {
 public:
-    Array() = default;
-    Array(std::vector<int> shape);
+    Array() = default; // default constructor
+    ~Array() = default; //default destructor
 
-    ~Array() = default;
-
-    int dim();
-    std::vector<int> shape() { return m_Shape; }
+    template <typename T>
+    Array(T val, std::vector<int> shape); // constructor with val and shape (same value for all elements)
 
 private:
-    std::vector<int> m_Shape = {0};
-    T *data = nullptr;
-    T *buffer = nullptr;
-    size_t m_BufferSize = 0;
+    void *offset = nullptr;    // offset of the array
+    std::vector<int> shape_;   // shape of the array
+    std::vector<int> strides_; // strides of the array
+    int size_ = 0;             // size of the array in bytes
+    Dtype dtype_;              // data type of the array
+    Buffer buffer_;            // buffer of the array
+
+    int computeSize();
 };
 
 template <typename T>
-Array<T>::Array(std::vector<int> shape)
+Array::Array(T val, std::vector<int> shape)
 {
     Array();
-    m_Shape = shape;
+    shape_.assign(shape.begin(), shape.end()); // need to optimize this
+    strides_.assign(shape_.size(), 0);              // need to optimize this
+    strides_[0] = 1;
+    for (int i = 1; i < shape_.size(); i++)
+    {
+        strides_[i] = strides_[i - 1] * shape_[i - 1];
+    }
+    dtype_ = Dtype(sizeof(T));
+    size_ = computeSize();
+    buffer_.allocate(size_ * dtype_.typeSize_);
+    offset = buffer_.ptr_;
 }
-
-template <typename T>
-int Array<T>::dim()
-{
-    int arrayDim = 1;
-    for (int i = 0; i < m_Shape.size(); i++)
-    {
-        arrayDim *= m_Shape[i];
-    }
-    return arrayDim;
-}
-
-// opertor == overload
-template <typename T>
-bool operator==(Array<T> &a, Array<T> &b)
-{
-    if (a.shape() != b.shape())
-    {
-        return false;
-    }
-    else
-    {
-        for (int i = 0; i < a.dim(); i++)
-        {
-            if (a->data[i] != b->data[i])
-            {
-                return false;
-            }
-        }
-    }
-};

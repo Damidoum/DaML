@@ -1,14 +1,16 @@
 #include <iostream>
+#include <vector>
 #include "core/array.h"
 
 using namespace std;
 
 int main(int, char **)
 {
-    vector<int> shape = {3, 2, 3};
-    Array<int> a = Array<int>(shape);
-    Array<int> c({3, 2, 3});
-    Array<int> b;
-    cout << (a == c) << endl;
+    int a = 2;
+    cout << "Hello, world !\n"
+         << endl;
+    std::vector<int> shape = {2, 3};
+    Array test1;
+    Array test = Array(1, shape);
     return 0;
 }
