@@ -2,15 +2,9 @@
 #include <vector>
 #include "core/array.h"
 
-using namespace std;
-
 int main(int, char **)
 {
-    int a = 2;
-    cout << "Hello, world !\n"
-         << endl;
-    std::vector<int> shape = {2, 3};
-    Array test1;
-    Array test = Array(1, shape);
+    Array test1(1, {1, 2});
+    Array test2({1, 2, 3, 4, 5, 6}, {2, 3});
     return 0;
 }

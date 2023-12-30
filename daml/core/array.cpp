@@ -33,3 +33,12 @@ int Array::computeSize()
     }
     return size;
 }
+
+void Array::computeStrides()
+{
+    strides_.assign(shape_.size(), 1);
+    for (int i = shape_.size() - 2; i >= 0; i--)
+    {
+        strides_[i] = strides_[i + 1] * shape_[i + 1];
+    }
+}

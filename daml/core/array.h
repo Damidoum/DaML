@@ -16,11 +16,14 @@ struct Buffer
 class Array
 {
 public:
-    Array() = default; // default constructor
-    ~Array() = default; //default destructor
+    Array() = default;  // default constructor
+    ~Array() = default; // default destructor
 
     template <typename T>
     Array(T val, std::vector<int> shape); // constructor with val and shape (same value for all elements)
+
+    template <typename T>
+    Array(std::initializer_list<T> list, std::vector<int> shape); // constructor with list and shape
 
 private:
     void *offset = nullptr;    // offset of the array
@@ -31,21 +34,41 @@ private:
     Buffer buffer_;            // buffer of the array
 
     int computeSize();
+    void computeStrides();
 };
 
 template <typename T>
 Array::Array(T val, std::vector<int> shape)
 {
     Array();
-    shape_.assign(shape.begin(), shape.end()); // need to optimize this
-    strides_.assign(shape_.size(), 0);              // need to optimize this
-    strides_[0] = 1;
-    for (int i = 1; i < shape_.size(); i++)
+    shape_.assign(shape.begin(), shape.end());  // need to optimize this
+    computeStrides();                           // need to optimize this
+    dtype_ = Dtype(sizeof(T));                  // converte type to Dtype
+    size_ = computeSize();                      // compute the size of the array
+    buffer_.allocate(size_ * dtype_.typeSize_); // allocate memory for the array
+    offset = buffer_.ptr_;                      // set the offset to the beginning of the array
+
+    // initialize the array with val
+    for (int i = 0; i < size_; i++)
     {
-        strides_[i] = strides_[i - 1] * shape_[i - 1];
+        *((T *)offset + i) = val;
     }
-    dtype_ = Dtype(sizeof(T));
-    size_ = computeSize();
-    buffer_.allocate(size_ * dtype_.typeSize_);
-    offset = buffer_.ptr_;
+}
+
+template <typename T>
+Array::Array(std::initializer_list<T> list, std::vector<int> shape)
+{
+    Array();
+    shape_.assign(shape.begin(), shape.end());  // need to optimize this
+    computeStrides();                           // need to optimize this
+    dtype_ = Dtype(sizeof(T));                  // converte type to Dtype
+    size_ = computeSize();                      // compute the size of the array
+    buffer_.allocate(size_ * dtype_.typeSize_); // allocate memory for the array
+    offset = buffer_.ptr_;                      // set the offset to the beginning of the array
+
+    // initialize the array with list
+    for (int i = 0; i < size_; i++)
+    {
+        *((T *)offset + i) = *(list.begin() + i);
+    }
 }
