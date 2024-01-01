@@ -5,4 +5,4 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(DaMLlib)
 
-add_library(array array.cpp)
+add_library(array array.cpp operations.cpp dtype.cpp)

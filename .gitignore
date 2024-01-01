@@ -53,3 +53,6 @@ CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 Makefile
+
+# Personal files
+numpyLikeArray.txt

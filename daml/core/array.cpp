@@ -24,6 +24,32 @@ void Buffer::allocate(size_t numberOfBytes)
     }
 }
 
+Buffer::Buffer(size_t numberOfBytes)
+{
+    allocate(numberOfBytes);
+}
+
+Array::Array(const Array &other)
+{
+    shape_ = other.shape_;
+    strides_ = other.strides_;
+    size_ = other.size_;
+    dtype_ = other.dtype_;
+    buffer_ = Buffer(other.size_ * other.dtype_.typeSize_);
+    offset_ = buffer_.ptr_;
+    std::memcpy(buffer_.ptr_, other.buffer_.ptr_, other.size_ * other.dtype_.typeSize_);
+}
+
+Array::Array(std::vector<int> shape, Dtype dtype)
+{
+    shape_ = shape;
+    dtype_ = dtype;
+    computeStrides();
+    size_ = computeSize();
+    buffer_ = Buffer(size_ * dtype_.typeSize_);
+    offset_ = buffer_.ptr_;
+}
+
 int Array::computeSize()
 {
     int size = 1;

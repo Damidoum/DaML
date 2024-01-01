@@ -8,6 +8,7 @@ struct Buffer
     size_t numberOfBytes_ = 0;
 
     Buffer() = default;
+    Buffer(size_t numberOfBytes);
     ~Buffer() = default;
 
     void allocate(size_t numberOfBytes);
@@ -25,8 +26,27 @@ public:
     template <typename T>
     Array(std::initializer_list<T> list, std::vector<int> shape); // constructor with list and shape
 
+    Array(const Array &other);                  // copy constructor
+    Array(std::vector<int> shape, Dtype dtype); // constructor with shape and dtype
+
+    // getters
+    template <typename T>
+    T *data() { return (T *)buffer_.ptr_; }
+
+    std::vector<int> shape() { return shape_; }
+    std::vector<int> getStrides() { return strides_; }
+    int size() { return size_; }
+    Dtype dtype() { return dtype_; }
+
+    // operations
+    bool checkOperatorCompatibility(Array &array1, Array &array2);
+    Array add(Array &other, bool inplace = false);
+    Array sub(Array &other, bool inplace = false);
+    Array multiply(Array &other, bool inplace = false);
+    Array divide(Array &other, bool inplace = false);
+
 private:
-    void *offset = nullptr;    // offset of the array
+    void *offset_ = nullptr;   // offset of the array
     std::vector<int> shape_;   // shape of the array
     std::vector<int> strides_; // strides of the array
     int size_ = 0;             // size of the array in bytes
@@ -35,6 +55,12 @@ private:
 
     int computeSize();
     void computeStrides();
+
+    // generic operation
+    template <typename T, typename Op>
+    Array genericOperator(Op op, Array &other, bool inplace = false);
+    template <typename Op>
+    Array wellTypedGenericOperator(Op op, Array &other, bool inplace = false);
 };
 
 template <typename T>
@@ -43,15 +69,15 @@ Array::Array(T val, std::vector<int> shape)
     Array();
     shape_.assign(shape.begin(), shape.end());  // need to optimize this
     computeStrides();                           // need to optimize this
-    dtype_ = Dtype(sizeof(T));                  // converte type to Dtype
+    dtype_ = Dtype(typeid(T).name()[0]);        // converte type to Dtype
     size_ = computeSize();                      // compute the size of the array
     buffer_.allocate(size_ * dtype_.typeSize_); // allocate memory for the array
-    offset = buffer_.ptr_;                      // set the offset to the beginning of the array
+    offset_ = buffer_.ptr_;                     // set the offset to the beginning of the array
 
     // initialize the array with val
     for (int i = 0; i < size_; i++)
     {
-        *((T *)offset + i) = val;
+        *((T *)offset_ + i) = val;
     }
 }
 
@@ -61,14 +87,66 @@ Array::Array(std::initializer_list<T> list, std::vector<int> shape)
     Array();
     shape_.assign(shape.begin(), shape.end());  // need to optimize this
     computeStrides();                           // need to optimize this
-    dtype_ = Dtype(sizeof(T));                  // converte type to Dtype
+    dtype_ = Dtype(typeid(T).name()[0]);        // converte type to Dtype
     size_ = computeSize();                      // compute the size of the array
     buffer_.allocate(size_ * dtype_.typeSize_); // allocate memory for the array
-    offset = buffer_.ptr_;                      // set the offset to the beginning of the array
+    offset_ = buffer_.ptr_;                     // set the offset to the beginning of the array
 
     // initialize the array with list
     for (int i = 0; i < size_; i++)
     {
-        *((T *)offset + i) = *(list.begin() + i);
+        *((T *)offset_ + i) = *(list.begin() + i);
+    }
+}
+
+template <typename T, typename Op>
+Array Array::genericOperator(Op op, Array &other, bool inplace /* = false */)
+{
+    if (!checkOperatorCompatibility(*this, other))
+    {
+        return *this;
+    }
+    else
+    {
+        T *bufferPtr = data<T>();
+        T *otherBufferPtr = other.data<T>();
+        if (inplace)
+        {
+            for (int i = 0; i < size_; i++)
+            {
+                bufferPtr[i] = op(bufferPtr[i], otherBufferPtr[i]);
+            }
+            return *this;
+        }
+        else
+        {
+            Array output = Array(shape_, dtype_);
+            T *outputBufferPtr = output.data<T>();
+            for (int i = 0; i < size_; i++)
+            {
+                outputBufferPtr[i] = op(bufferPtr[i], otherBufferPtr[i]);
+            }
+            return output;
+        }
+    }
+}
+
+template <typename Op>
+Array Array::wellTypedGenericOperator(Op op, Array &other, bool inplace /* = false*/)
+{
+    switch (dtype_.type_)
+    {
+    case Type::int32:
+        return genericOperator<int>(op, other, inplace);
+        break;
+    case Type::float32:
+        return genericOperator<float>(op, other, inplace);
+        break;
+    case Type::bool_:
+        return genericOperator<bool>(op, other, inplace);
+        break;
+    default:
+        std::cout << "Error: invalid type" << std::endl;
+        break;
     }
 }
