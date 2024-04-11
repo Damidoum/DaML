@@ -1,0 +1,23 @@
+cmake_minimum_required(VERSION 3.15)
+
+project(DaML
+        VERSION 0.1.0
+        DESCRIPTION "A simple data modeling language"
+)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_subdirectory(core)
+add_executable(main main.cpp)
+target_link_libraries(main PRIVATE array)
+
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+  set(
+    CMAKE_CXX_FLAGS
+    "${CMAKE_CXX_FLAGS} -Werror -fsanitize=undefined -fsanitize=address"
+  )
+  target_link_options(main
+    BEFORE PUBLIC -fsanitize=undefined PUBLIC -fsanitize=address
+  )
+endif()
