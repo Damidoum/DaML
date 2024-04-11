@@ -21,17 +21,13 @@ public:
     ~Array() = default; // default destructor
 
     template <typename T>
-    Array(T val, std::vector<int> shape); // constructor with val and shape (same value for all elements)
+    Array(T val, std::vector<int> &shape); // constructor with val and shape (same value for all elements)
 
     template <typename T>
-    Array(std::initializer_list<T> list, std::vector<int> shape); // constructor with list and shape
+    Array(std::initializer_list<T> list, std::vector<int> &shape); // constructor with list and shape
 
     Array(const Array &other);                  // copy constructor
     Array(std::vector<int> shape, Dtype dtype); // constructor with shape and dtype
-
-    // getters
-    template <typename T>
-    T *data() { return (T *)buffer_.ptr_; }
 
     std::vector<int> shape() { return shape_; }
     std::vector<int> getStrides() { return strides_; }
@@ -53,6 +49,10 @@ private:
     Dtype dtype_;              // data type of the array
     Buffer buffer_;            // buffer of the array
 
+    // getters
+    template <typename T>
+    T *data() { return (T *)buffer_.ptr_; }
+
     int computeSize();
     void computeStrides();
 
@@ -64,27 +64,27 @@ private:
 };
 
 template <typename T>
-Array::Array(T val, std::vector<int> shape)
+Array::Array(T val, std::vector<int> &shape)
 {
-    Array();
     shape_.assign(shape.begin(), shape.end());  // need to optimize this
     computeStrides();                           // need to optimize this
     dtype_ = Dtype(typeid(T).name()[0]);        // converte type to Dtype
     size_ = computeSize();                      // compute the size of the array
     buffer_.allocate(size_ * dtype_.typeSize_); // allocate memory for the array
     offset_ = buffer_.ptr_;                     // set the offset to the beginning of the array
+
+    T *bufferPtr = data<T>();
 
     // initialize the array with val
     for (int i = 0; i < size_; i++)
     {
-        *((T *)offset_ + i) = val;
+        *(bufferPtr + i) = val;
     }
 }
 
 template <typename T>
-Array::Array(std::initializer_list<T> list, std::vector<int> shape)
+Array::Array(std::initializer_list<T> list, std::vector<int> &shape)
 {
-    Array();
     shape_.assign(shape.begin(), shape.end());  // need to optimize this
     computeStrides();                           // need to optimize this
     dtype_ = Dtype(typeid(T).name()[0]);        // converte type to Dtype
@@ -92,10 +92,18 @@ Array::Array(std::initializer_list<T> list, std::vector<int> shape)
     buffer_.allocate(size_ * dtype_.typeSize_); // allocate memory for the array
     offset_ = buffer_.ptr_;                     // set the offset to the beginning of the array
 
+    if (list.size() != size_)
+    {
+        std::cout << "Error: incompatible size" << std::endl;
+        return;
+    }
+
+    T *bufferPtr = data<T>();
+
     // initialize the array with list
     for (int i = 0; i < size_; i++)
     {
-        *((T *)offset_ + i) = *(list.begin() + i);
+        *(bufferPtr + i) = *(list.begin() + i);
     }
 }
 
